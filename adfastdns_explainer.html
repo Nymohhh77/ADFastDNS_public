@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADFastDNS – How It Protects Your Phone</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon: #00ffe7;
+    --danger: #ff3a3a;
+    --safe: #39ff6b;
+    --yellow: #ffe03a;
+    --dark: #0a0d1a;
+    --panel-bg: #111827;
+    --ink: #1a1a2e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--dark);
+    font-family: 'Comic Neue', cursive;
+    color: #fff;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 2.5rem 1rem 1.5rem;
+    background: linear-gradient(180deg, #000 0%, var(--dark) 100%);
+    position: relative;
+    border-bottom: 3px solid var(--neon);
+  }
+  header h1 {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    letter-spacing: 4px;
+    color: var(--neon);
+    text-shadow: 0 0 20px var(--neon), 0 0 60px #00ffe750;
+    line-height: 1;
+  }
+  header p {
+    font-size: 1.1rem;
+    color: #aaa;
+    margin-top: 0.5rem;
+    font-weight: 700;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--neon);
+    color: #000;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 0.5rem;
+    letter-spacing: 2px;
+  }
+
+  /* COMIC GRID */
+  .comic-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0;
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+
+  /* PANEL */
+  .panel {
+    border: 4px solid #fff;
+    border-radius: 4px;
+    background: var(--panel-bg);
+    position: relative;
+    overflow: hidden;
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .panel:hover { transform: scale(1.02); box-shadow: 0 0 30px var(--neon)40; }
+  .panel-number {
+    position: absolute;
+    top: 10px; left: 14px;
+    font-family: 'Bangers', cursive;
+    font-size: 2rem;
+    color: #fff;
+    background: #000;
+    border: 3px solid #fff;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    z-index: 10;
+  }
+  .panel-scene {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 3rem 1.5rem 1rem;
+    min-height: 230px;
+  }
+  .panel-caption {
+    background: #000;
+    border-top: 3px solid #fff;
+    padding: 0.8rem 1rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #eee;
+  }
+  .panel-title {
+    font-family: 'Bangers', cursive;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  /* SPEECH BUBBLE */
+  .bubble {
+    background: #fff;
+    color: #000;
+    border: 3px solid #000;
+    border-radius: 16px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    position: absolute;
+    max-width: 160px;
+    line-height: 1.3;
+    box-shadow: 3px 3px 0 #000;
+  }
+  .bubble::after {
+    content: '';
+    position: absolute;
+    width: 0; height: 0;
+    border: 10px solid transparent;
+  }
+  .bubble.down-left::after {
+    border-top-color: #000;
+    bottom: -23px; left: 20px;
+  }
+  .bubble.down-right::after {
+    border-top-color: #000;
+    bottom: -23px; right: 20px;
+  }
+  .bubble.danger-bubble {
+    background: var(--danger);
+    color: #fff;
+    border-color: #800;
+  }
+  .bubble.safe-bubble {
+    background: var(--safe);
+    color: #000;
+    border-color: #006622;
+  }
+
+  /* SVG SCENES */
+  svg.scene { width: 100%; max-width: 260px; }
+
+  /* ANIMATIONS */
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes shake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
+  @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+  @keyframes glow { 0%,100%{filter:drop-shadow(0 0 4px var(--neon))} 50%{filter:drop-shadow(0 0 18px var(--neon))} }
+  @keyframes dash { to{stroke-dashoffset: 0;} }
+  @keyframes popIn { 0%{transform:scale(0) rotate(-10deg);opacity:0} 80%{transform:scale(1.15) rotate(2deg)} 100%{transform:scale(1) rotate(0);opacity:1} }
+  @keyframes slideRight { from{transform:translateX(-40px);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .float { animation: float 3s ease-in-out infinite; }
+  .pulse-anim { animation: pulse 1.5s ease-in-out infinite; }
+  .shake-anim { animation: shake 0.5s ease-in-out infinite; }
+  .spin-anim { animation: spin 4s linear infinite; }
+  .glow-anim { animation: glow 2s ease-in-out infinite; }
+  .pop-in { animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  .blink-anim { animation: blink 1s step-end infinite; }
+
+  /* PANEL COLOR THEMES */
+  .panel-1 .panel-scene { background: radial-gradient(ellipse at center, #1a0a2e 0%, #0a0d1a 100%); }
+  .panel-2 .panel-scene { background: radial-gradient(ellipse at center, #0d1a0a 0%, #0a0d1a 100%); }
+  .panel-3 .panel-scene { background: radial-gradient(ellipse at center, #1a0a0a 0%, #0a0d1a 100%); }
+  .panel-4 .panel-scene { background: radial-gradient(ellipse at center, #0a1a1a 0%, #0a0d1a 100%); }
+  .panel-5 .panel-scene { background: radial-gradient(ellipse at center, #1a150a 0%, #0a0d1a 100%); }
+  .panel-6 .panel-scene { background: radial-gradient(ellipse at center, #0a0d2a 0%, #0a0d1a 100%); }
+
+  /* ONOMATOPOEIA */
+  .sfx {
+    font-family: 'Bangers', cursive;
+    font-size: 2.2rem;
+    position: absolute;
+    text-shadow: 3px 3px 0 #000;
+    pointer-events: none;
+  }
+
+  /* PROGRESS NAV */
+  .nav-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 1.5rem;
+  }
+  .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #444;
+    border: 2px solid #fff;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+  .dot:hover, .dot.active { background: var(--neon); transform: scale(1.3); }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    border-top: 3px solid var(--neon);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    color: var(--neon);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  footer a { color: var(--neon); text-decoration: none; }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .legend span { display:flex; align-items:center; gap:6px; }
+  .dot-r { width:10px;height:10px;border-radius:50%;background:var(--danger); }
+  .dot-g { width:10px;height:10px;border-radius:50%;background:var(--safe); }
+  .dot-b { width:10px;height:10px;border-radius:50%;background:var(--neon); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000c;
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--panel-bg);
+    border: 4px solid var(--neon);
+    border-radius: 12px;
+    max-width: 480px;
+    width: 90%;
+    padding: 2rem;
+    position: relative;
+    box-shadow: 0 0 60px var(--neon)60;
+  }
+  .modal-box h2 { font-family:'Bangers',cursive; font-size:2rem; color:var(--neon); margin-bottom:0.5rem; }
+  .modal-box p { line-height:1.6; color:#ccc; font-size:0.95rem; margin-top:0.5rem; }
+  .modal-close {
+    position: absolute;
+    top: 12px; right: 16px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #fff;
+    font-family: 'Bangers', cursive;
+    line-height: 1;
+  }
+  .modal-close:hover { color: var(--danger); }
+  .tech-tag {
+    display:inline-block;
+    background:#00ffe720;
+    border:1px solid var(--neon);
+    color:var(--neon);
+    border-radius:4px;
+    font-size:0.72rem;
+    font-family:'Orbitron',monospace;
+    padding:2px 8px;
+    margin: 4px 3px 0 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🛡️ ADFASTDNS</h1>
+  <p>A visual story of how your phone stays safe & fast</p>
+  <span class="badge">TAP ANY PANEL TO LEARN MORE</span>
+</header>
+
+<div class="legend">
+  <span><span class="dot-r"></span> Threat / Blocked</span>
+  <span><span class="dot-g"></span> Safe / Allowed</span>
+  <span><span class="dot-b"></span> ADFastDNS Active</span>
+</div>
+
+<div class="comic-strip">
+
+  <!-- PANEL 1: The Problem -->
+  <div class="panel panel-1" onclick="openModal(1)">
+    <div class="panel-number">1</div>
+    <div class="panel-scene">
+      <svg class="scene" viewBox="0 0 260 220">
+        <!-- Sky / BG signals -->
+        <circle cx="130" cy="110" r="90" fill="#1a0030" opacity="0.5"/>
+        <!-- Phone body -->
+        <rect x="90" y="60" width="80" height="140" rx="10" fill="#222" stroke="#555" stroke-width="3"/>
+        <rect x="96" y="72" width="68" height="110" fill="#111"/>
+        <!-- Threats flying in -->
+        <g class="shake-anim" transform="translate(10,30)">
+          <text font-size="28" fill="#ff3a3a" font-family="Arial">💀</text>
+        </g>
+        <g class="pulse-anim" transform="translate(200,50)">
+          <text font-size="22" fill="#ff8c00" font-family="Arial">🦠</text>
+        </g>
+        <g class="float" transform="translate(30,100)">
+          <text font-size="20" fill="#ff3a3a" font-family="Arial">🎣</text>
+        </g>
+        <g class="shake-anim" transform="translate(195,110)">
+          <text font-size="22" fill="#cc00cc" font-family="Arial">📢</text>
+        </g>
+        <!-- Arrows pointing at phone -->
+        <line x1="40" y1="55" x2="88" y2="100" stroke="#ff3a3a" stroke-width="2" stroke-dasharray="4 3" opacity="0.7"/>
+        <line x1="205" y1="70" x2="172" y2="105" stroke="#ff8c00" stroke-width="2" stroke-dasharray="4 3" opacity="0.7"/>
+        <line x1="50" y1="120" x2="88" y2="130" stroke="#ff3a3a" stroke-width="2" stroke-dasharray="4 3" opacity="0.7"/>
+        <line x1="200" y1="130" x2="172" y2="135" stroke="#cc00cc" stroke-width="2" stroke-dasharray="4 3" opacity="0.7"/>
+        <!-- Screen showing chaos -->
+        <rect x="100" y="78" width="60" height="100" fill="#300"/>
+        <text x="107" y="95" font-size="9" fill="#ff3a3a" font-family="Arial">ADS ADS ADS</text>
+        <text x="110" y="108" font-size="9" fill="#ff8c00" font-family="Arial">⚠ MALWARE</text>
+        <text x="105" y="122" font-size="9" fill="#cc00cc" font-family="Arial">TRACKING...</text>
+        <text x="108" y="136" font-size="9" fill="#ff3a3a" font-family="Arial">PHISHING!</text>
+        <text x="104" y="150" font-size="8" fill="#888" font-family="Arial">SLOW 🐢 DNS</text>
+      </svg>
+      <div class="bubble down-right" style="top:20px;right:10px;animation:shake 0.4s infinite;">
+        Your phone is under ATTACK! 😱
+      </div>
+      <div class="sfx" style="color:var(--danger);top:8px;left:50px;transform:rotate(-10deg);font-size:1.8rem;">ZAP!</div>
+    </div>
+    <div class="panel-caption">
+      <div class="panel-title" style="color:var(--danger);">THE THREAT JUNGLE</div>
+      Ads, malware, trackers & phishing attacks bombard your phone every time you browse. Standard DNS is unencrypted — anyone can spy!
+    </div>
+  </div>
+
+  <!-- PANEL 2: DNS Explained -->
+  <div class="panel panel-2" onclick="openModal(2)">
+    <div class="panel-number">2</div>
+    <div class="panel-scene">
+      <svg class="scene" viewBox="0 0 260 220">
+        <!-- background grid -->
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M20 0L0 0L0 20" fill="none" stroke="#1a2a1a" stroke-width="1"/>
+        </pattern>
+        <rect width="260" height="220" fill="url(#grid)"/>
+        <!-- User device -->
+        <rect x="10" y="80" width="55" height="90" rx="6" fill="#1a3a1a" stroke="#39ff6b" stroke-width="2"/>
+        <rect x="17" y="89" width="41" height="70" fill="#111"/>
+        <text x="20" y="130" font-size="18" font-family="Arial">📱</text>
+        <text x="18" y="150" font-size="8" fill="#39ff6b" font-family="monospace">YOU</text>
+        <!-- arrow right -->
+        <g class="pulse-anim">
+          <line x1="67" y1="120" x2="105" y2="120" stroke="#39ff6b" stroke-width="2.5"/>
+          <polygon points="105,115 115,120 105,125" fill="#39ff6b"/>
+          <text x="70" y="114" font-size="7" fill="#aaa" font-family="monospace">google.com?</text>
+        </g>
+        <!-- DNS Server (DoH) -->
+        <rect x="115" y="90" width="60" height="62" rx="8" fill="#0d2a1a" stroke="#00ffe7" stroke-width="2.5"/>
+        <text x="118" y="112" font-size="9" fill="#00ffe7" font-family="monospace" font-weight="bold">DoH Server</text>
+        <text x="119" y="128" font-size="8" fill="#aaa" font-family="monospace">Cloudflare</text>
+        <text x="125" y="144" font-size="15" font-family="Arial">🔒</text>
+        <!-- lock animation -->
+        <circle cx="145" cy="121" r="28" fill="none" stroke="#00ffe7" stroke-width="1" opacity="0.3" class="pulse-anim"/>
+        <!-- arrow right to web -->
+        <g class="pulse-anim" style="animation-delay:0.5s">
+          <line x1="177" y1="120" x2="218" y2="120" stroke="#00ffe7" stroke-width="2.5"/>
+          <polygon points="218,115 228,120 218,125" fill="#00ffe7"/>
+          <text x="180" y="113" font-size="7" fill="#aaa" font-family="monospace">142.250.x.x ✓</text>
+        </g>
+        <!-- Internet -->
+        <circle cx="240" cy="120" r="22" fill="#0a1a30" stroke="#00ffe7" stroke-width="2"/>
+        <text x="228" y="125" font-size="20" font-family="Arial">🌐</text>
+        <!-- Label at bottom -->
+        <text x="130" y="185" font-size="9" fill="#aaa" text-anchor="middle" font-family="monospace">ENCRYPTED DNS QUERY (DoH)</text>
+        <!-- Old way crossed out above -->
+        <line x1="10" y1="50" x2="250" y2="50" stroke="#ff3a3a" stroke-width="1.5" opacity="0.5" stroke-dasharray="6 4"/>
+        <text x="18" y="43" font-size="7" fill="#ff3a3a" font-family="monospace">OLD PLAIN DNS — anyone can read 👀</text>
+      </svg>
+      <div class="bubble down-left" style="bottom:95px;left:8px;" class="safe-bubble">
+        <span style="color:#006622;">DoH = HTTPS for DNS! 🔒</span>
+      </div>
+    </div>
+    <div class="panel-caption">
+      <div class="panel-title" style="color:var(--safe);">DNS OVER HTTPS (DoH)</div>
+      Every website visit starts with a DNS query. ADFastDNS encrypts it with DoH (via Cloudflare) so your ISP can't snoop on where you go.
+    </div>
+  </div>
+
+  <!-- PANEL 3: Ad Blocker -->
+  <div class="panel panel-3" onclick="openModal(3)">
+    <div class="panel-number">3</div>
+    <div class="panel-scene">
+      <svg class="scene" viewBox="0 0 260 220">
+        <rect width="260" height="220" fill="#1a0808"/>
+        <!-- Shield -->
+        <path d="M130 20 L190 50 L190 120 Q190 170 130 200 Q70 170 70 120 L70 50 Z" fill="#0d1a0d" stroke="#39ff6b" stroke-width="4" class="glow-anim"/>
+        <text x="130" y="125" text-anchor="middle" font-size="50" font-family="Arial" class="float">🛡️</text>
+        <!-- Blocked ads approaching from sides -->
+        <g style="animation:slideRight 1s infinite alternate;">
+          <text x="8" y="85" font-size="20" font-family="Arial">📢</text>
+          <line x1="32" y1="80" x2="65" y2="80" stroke="#ff3a3a" stroke-width="2" stroke-dasharray="4"/>
+          <text x="48" y="73" font-size="8" fill="#ff3a3a" font-family="monospace">AD</text>
+        </g>
+        <g style="animation:slideRight 1.3s infinite alternate-reverse;">
+          <text x="8" y="135" font-size="18" font-family="Arial">🦠</text>
+          <line x1="30" y1="130" x2="65" y2="130" stroke="#ff8c00" stroke-width="2" stroke-dasharray="4"/>
+          <text x="43" y="123" font-size="7" fill="#ff8c00" font-family="monospace">TRACKER</text>
+        </g>
+        <g style="animation:slideRight 1s infinite alternate; transform-origin:250px 90px; transform:scaleX(-1)">
+          <text x="225" y="85" font-size="20" font-family="Arial">🎣</text>
+        </g>
+        <!-- X marks on shield edges -->
+        <text x="58" y="88" font-size="18" fill="#ff3a3a" font-family="Arial" style="animation:popIn 0.8s 0.3s both">✖</text>
+        <text x="58" y="138" font-size="18" fill="#ff3a3a" font-family="Arial" style="animation:popIn 0.8s 0.5s both">✖</text>
+        <text x="183" y="88" font-size="18" fill="#ff3a3a" font-family="Arial" style="animation:popIn 0.8s 0.7s both">✖</text>
+        <!-- Sparkle on shield -->
+        <text x="118" y="62" font-size="12" fill="#39ff6b" class="blink-anim">✦</text>
+        <text x="138" y="190" font-size="12" fill="#39ff6b" class="blink-anim" style="animation-delay:0.5s">✦</text>
+      </svg>
+      <div class="sfx" style="color:var(--safe);top:15px;right:15px;">BLOCKED! ✋</div>
+    </div>
+    <div class="panel-caption">
+      <div class="panel-title" style="color:var(--safe);">THE FILTER SHIELD</div>
+      ADFastDNS matches every DNS request against EasyList & custom filter lists. Ads & trackers never even reach your browser!
+    </div>
+  </div>
+
+  <!-- PANEL 4: HIDS / Malware Protection -->
+  <div class="panel panel-4" onclick="openModal(4)">
+    <div class="panel-number">4</div>
+    <div class="panel-scene">
+      <svg class="scene" viewBox="0 0 260 220">
+        <rect width="260" height="220" fill="#071a1a"/>
+        <!-- Radar circle animation -->
+        <circle cx="130" cy="110" r="80" fill="none" stroke="#00ffe730" stroke-width="1.5"/>
+        <circle cx="130" cy="110" r="55" fill="none" stroke="#00ffe740" stroke-width="1.5"/>
+        <circle cx="130" cy="110" r="30" fill="none" stroke="#00ffe750" stroke-width="1.5"/>
+        <!-- Radar sweep -->
+        <g style="transform-origin:130px 110px; animation:spin 3s linear infinite;">
+          <line x1="130" y1="110" x2="130" y2="30" stroke="#00ffe7" stroke-width="2.5" opacity="0.8"/>
+          <path d="M130 110 L130 30 A80 80 0 0 1 210 110 Z" fill="#00ffe710"/>
+        </g>
+        <!-- Crosshairs -->
+        <line x1="90" y1="110" x2="170" y2="110" stroke="#00ffe730" stroke-width="1"/>
+        <line x1="130" y1="70" x2="130" y2="150" stroke="#00ffe730" stroke-width="1"/>
+        <!-- Threat blip -->
+        <circle cx="165" cy="75" r="6" fill="var(--danger)" class="pulse-anim"/>
+        <circle cx="165" cy="75" r="12" fill="none" stroke="var(--danger)" stroke-width="2" class="pulse-anim"/>
+        <text x="174" y="68" font-size="8" fill="var(--danger)" font-family="monospace">MALWARE</text>
+        <!-- Safe blip -->
+        <circle cx="95" cy="140" r="5" fill="var(--safe)"/>
+        <text x="50" y="158" font-size="8" fill="var(--safe)" font-family="monospace">SAFE ✓</text>
+        <!-- Center phone icon -->
+        <text x="112" y="118" font-size="22" font-family="Arial">📱</text>
+        <!-- HIDS label -->
+        <rect x="88" y="178" width="84" height="18" rx="4" fill="#00ffe720" stroke="#00ffe7" stroke-width="1"/>
+        <text x="130" y="191" text-anchor="middle" font-size="8" fill="#00ffe7" font-family="monospace" font-weight="bold">HIDS ACTIVE</text>
+      </svg>
+      <div class="bubble down-left" style="top:18px;left:8px;">
+        Heartbeat check... <br/>🎯 Threat detected!
+      </div>
+    </div>
+    <div class="panel-caption">
+      <div class="panel-title" style="color:var(--neon);">HIDS — YOUR RADAR SYSTEM</div>
+      The Host-based Intrusion Detection System scans for malware, spyware, DNS tunneling, TLS mismatches & IP-level threats in real time.
+    </div>
+  </div>
+
+  <!-- PANEL 5: Anti-DPI & Speed -->
+  <div class="panel panel-5" onclick="openModal(5)">
+    <div class="panel-number">5</div>
+    <div class="panel-scene">
+      <svg class="scene" viewBox="0 0 260 220">
+        <rect width="260" height="220" fill="#1a1000"/>
+        <!-- ISP / DPI eye -->
+        <ellipse cx="50" cy="60" rx="38" ry="22" fill="#2a1a00" stroke="#ff8c00" stroke-width="2"/>
+        <circle cx="50" cy="60" r="12" fill="#ff8c00" opacity="0.8"/>
+        <circle cx="50" cy="60" r="6" fill="#000"/>
+        <text x="21" y="95" font-size="8" fill="#ff8c00" font-family="monospace">ISP / DPI</text>
+        <!-- Arrow from phone to ISP (dotted = fragmented) -->
+        <g class="float">
+          <text x="88" y="75" font-size="22" font-family="Arial">📱</text>
+        </g>
+        <!-- Fragmented packets -->
+        <rect x="118" y="54" width="12" height="8" rx="2" fill="var(--neon)" opacity="0.9"/>
+        <rect x="134" y="56" width="10" height="8" rx="2" fill="var(--neon)" opacity="0.7"/>
+        <rect x="148" y="52" width="14" height="8" rx="2" fill="var(--neon)" opacity="0.8"/>
+        <rect x="166" y="55" width="10" height="8" rx="2" fill="var(--neon)" opacity="0.6"/>
+        <text x="115" y="45" font-size="7" fill="var(--neon)" font-family="monospace">fragmented TLS Hello →</text>
+        <!-- DPI confused -->
+        <text x="12" y="50" font-size="14" fill="#ff8c00">😵</text>
+        <!-- Arrow from ISP (blocked) -->
+        <line x1="88" y1="65" x2="60" y2="65" stroke="#ff3a3a" stroke-width="2" stroke-dasharray="6 4"/>
+        <text x="63" y="58" font-size="9" fill="#ff3a3a" font-family="monospace">❌ ?!?</text>
+        <!-- Speed boost -->
+        <text x="60" y="145" font-size="10" fill="#ffe03a" font-family="'Bangers',cursive" letter-spacing="1">DNS CACHE</text>
+        <!-- Cache illustration -->
+        <rect x="55" y="150" width="150" height="40" rx="6" fill="#1a1500" stroke="#ffe03a" stroke-width="2"/>
+        <text x="68" y="168" font-size="8" fill="#aaa" font-family="monospace">google.com  → ✓ cached</text>
+        <text x="68" y="180" font-size="8" fill="#aaa" font-family="monospace">youtube.com → ✓ cached</text>
+        <!-- Lightning bolt -->
+        <text x="210" y="170" font-size="34" font-family="Arial" class="pulse-anim">⚡</text>
+        <!-- ISP eye cross -->
+        <line x1="13" y1="40" x2="87" y2="82" stroke="#39ff6b" stroke-width="2" opacity="0.6"/>
+        <line x1="87" y1="40" x2="13" y2="82" stroke="#39ff6b" stroke-width="2" opacity="0.6"/>
+      </svg>
+      <div class="sfx" style="color:var(--yellow);top:10px;right:10px;font-size:1.5rem;">ZOOM! ⚡</div>
+    </div>
+    <div class="panel-caption">
+      <div class="panel-title" style="color:var(--yellow);">ANTI-DPI + SPEED BOOST</div>
+      TLS packet fragmentation hides your traffic from ISP surveillance. On-device DNS caching means repeat lookups are instant — no lag!
+    </div>
+  </div>
+
+  <!-- PANEL 6: The Happy Result -->
+  <div class="panel panel-6" onclick="openModal(6)">
+    <div class="panel-number">6</div>
+    <div class="panel-scene">
+      <svg class="scene" viewBox="0 0 260 220">
+        <!-- Stars background -->
+        <rect width="260" height="220" fill="#05081a"/>
+        <circle cx="20" cy="20" r="1.5" fill="#fff" class="blink-anim"/>
+        <circle cx="240" cy="40" r="1" fill="#fff" class="blink-anim" style="animation-delay:0.3s"/>
+        <circle cx="80" cy="15" r="1.5" fill="#fff" class="blink-anim" style="animation-delay:0.7s"/>
+        <circle cx="200" cy="200" r="1" fill="#fff" class="blink-anim" style="animation-delay:0.2s"/>
+        <circle cx="50" cy="190" r="1.5" fill="#fff" class="blink-anim" style="animation-delay:0.9s"/>
+        <!-- Trophy / checkmark -->
+        <circle cx="130" cy="90" r="60" fill="#001a0d" stroke="#39ff6b" stroke-width="3" class="glow-anim"/>
+        <text x="130" y="105" text-anchor="middle" font-size="50" font-family="Arial" class="float">😎</text>
+        <!-- Stats ring around phone -->
+        <text x="52" y="68" font-size="12" font-family="Arial" class="float" style="animation-delay:0.2s">✅</text>
+        <text x="195" y="68" font-size="12" font-family="Arial" class="float" style="animation-delay:0.5s">✅</text>
+        <text x="52" y="128" font-size="12" font-family="Arial" class="float" style="animation-delay:0.8s">✅</text>
+        <text x="195" y="128" font-size="12" font-family="Arial" class="float" style="animation-delay:0.3s">✅</text>
+        <!-- Stats bar -->
+        <rect x="25" y="162" width="210" height="40" rx="6" fill="#001500" stroke="#39ff6b" stroke-width="2"/>
+        <text x="35" y="177" font-size="8" fill="#aaa" font-family="monospace">Queries blocked:</text>
+        <rect x="130" y="167" width="80" height="8" rx="2" fill="#222"/>
+        <rect x="130" y="167" width="56" height="8" rx="2" fill="var(--safe)"/>
+        <text x="215" y="175" font-size="8" fill="var(--safe)" font-family="monospace">70%</text>
+        <text x="35" y="195" font-size="8" fill="#aaa" font-family="monospace">DNS speed:</text>
+        <text x="120" y="195" font-size="8" fill="var(--neon)" font-family="monospace">⚡ INSTANT (cached)</text>
+        <!-- Sparkles -->
+        <text x="28" y="150" font-size="14" fill="var(--yellow)" class="blink-anim">★</text>
+        <text x="220" y="150" font-size="14" fill="var(--yellow)" class="blink-anim" style="animation-delay:0.4s">★</text>
+        <text x="125" y="155" font-size="14" fill="var(--yellow)" class="blink-anim" style="animation-delay:0.7s">★</text>
+      </svg>
+      <div class="bubble down-right" style="top:15px;right:10px;background:var(--safe);border-color:#006622;color:#000;">
+        Safe, fast & private! 🎉
+      </div>
+    </div>
+    <div class="panel-caption">
+      <div class="panel-title" style="color:var(--safe);">YOU'RE PROTECTED!</div>
+      With ADFastDNS enabled: 70%+ queries blocked, browsing is faster, ISP can't track you, and threats are stopped before they reach your apps.
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-box" id="modal-box">
+    <span class="modal-close" onclick="closeModal()">✕</span>
+    <h2 id="modal-title"></h2>
+    <p id="modal-body"></p>
+    <div id="modal-tags" style="margin-top:1rem;"></div>
+  </div>
+</div>
+
+<div class="nav-dots" id="dots">
+  <span class="dot active" onclick="scrollToPanel(0)"></span>
+  <span class="dot" onclick="scrollToPanel(1)"></span>
+  <span class="dot" onclick="scrollToPanel(2)"></span>
+  <span class="dot" onclick="scrollToPanel(3)"></span>
+  <span class="dot" onclick="scrollToPanel(4)"></span>
+  <span class="dot" onclick="scrollToPanel(5)"></span>
+</div>
+
+<footer>
+  <a href="https://nymohhh77.github.io/ADFastDNS_public/" target="_blank">ADFastDNS</a> — iOS 17+ · Available on the App Store · Privacy First, Always
+</footer>
+
+<script>
+const modals = [
+  {
+    title: "😱 The Threat Jungle",
+    body: "Without protection, your phone's DNS queries are sent in plain text. Hackers, ISPs and even Wi-Fi operators can intercept them. Malware domains are served freely, ads track every move, and phishing pages mimic real sites. Standard DNS offers zero encryption and zero filtering.",
+    tags: ["DNS plain text", "Malware", "Phishing", "Ad tracking", "ISP snooping"]
+  },
+  {
+    title: "🔒 DNS Over HTTPS (DoH)",
+    body: "ADFastDNS routes all your DNS queries through HTTPS — the same protocol used by banks. This means your ISP, your router, or any man-in-the-middle attacker cannot see what domains you're looking up. Cloudflare's DoH server resolves your queries fast and privately.",
+    tags: ["DNS over HTTPS", "Cloudflare", "Encrypted queries", "Privacy", "iOS 17+"]
+  },
+  {
+    title: "🛡️ Ad & Tracker Blocking",
+    body: "Before any page loads, ADFastDNS checks the requested domain against powerful filter lists like EasyList. If it's a known ad server or tracker, the DNS query is simply blocked — the request never leaves your phone. You can add custom lists or whitelist trusted sites you rely on.",
+    tags: ["EasyList", "Custom filters", "Ad blocking", "Tracker blocking", "Whitelist / Blacklist"]
+  },
+  {
+    title: "📡 Host-based Intrusion Detection (HIDS)",
+    body: "ADFastDNS includes a full HIDS engine that monitors traffic for malware, spyware, DNS tunneling attacks, DNS rebinding, DNS cloaking, TLS-SNI mismatches and suspicious JA4 fingerprints. It even performs heartbeat detection to catch stealthy connections trying to 'phone home' in the background.",
+    tags: ["HIDS", "Anti-malware", "DNS Rebinding", "DNS Tunneling", "TLS-SNI", "JA4 fingerprint", "IP Firewall"]
+  },
+  {
+    title: "⚡ Anti-DPI & Speed Cache",
+    body: "Deep Packet Inspection (DPI) is used by some ISPs and governments to monitor or censor traffic. ADFastDNS uses TLS Hello packet fragmentation and tail padding to make your traffic hard to fingerprint and classify. On top of that, on-device DNS caching stores resolved addresses locally so repeat lookups are instant.",
+    tags: ["Anti-DPI", "TLS fragmentation", "Tail padding", "DNS cache", "No VPN needed"]
+  },
+  {
+    title: "😎 You're Protected — Results!",
+    body: "The result: a dramatically cleaner, faster, and more private experience. The built-in Statistics dashboard shows you exactly how many queries were blocked and which domains tried to reach you. ADFastDNS runs silently in the background, uses minimal battery, and needs no VPN subscription.",
+    tags: ["Statistics", "No VPN", "Battery efficient", "iOS Network Extension", "Real-time protection"]
+  }
+];
+
+function openModal(n) {
+  const m = modals[n-1];
+  document.getElementById('modal-title').textContent = m.title;
+  document.getElementById('modal-body').textContent = m.body;
+  document.getElementById('modal-tags').innerHTML = m.tags.map(t => `<span class="tech-tag">${t}</span>`).join('');
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal') || e.currentTarget === document.querySelector('.modal-close')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+function scrollToPanel(i) {
+  const panels = document.querySelectorAll('.panel');
+  const dots = document.querySelectorAll('.dot');
+  dots.forEach(d => d.classList.remove('active'));
+  dots[i].classList.add('active');
+  panels[i].scrollIntoView({behavior:'smooth', block:'center'});
+}
+// Update active dot on scroll
+const panels = document.querySelectorAll('.panel');
+const dots = document.querySelectorAll('.dot');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const i = Array.from(panels).indexOf(e.target);
+      dots.forEach(d=>d.classList.remove('active'));
+      if(i>=0) dots[i].classList.add('active');
+    }
+  });
+}, {threshold:0.5});
+panels.forEach(p => observer.observe(p));
+</script>
+</body>
+</html>
