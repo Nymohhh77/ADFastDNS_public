@@ -47,13 +47,115 @@
                 padding: 15px;
             }
         }
+
+        /* ---- Service Status section ---- */
+        .status-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .status-item {
+            border-left: 4px solid #ccc;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            background-color: #fafafa;
+            border-radius: 0 6px 6px 0;
+        }
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+        .status-item.critical { border-left-color: #d93025; }
+        .status-item.warning  { border-left-color: #f29900; }
+        .status-item.info     { border-left-color: #1a73e8; }
+        .status-item.resolved { border-left-color: #188038; }
+
+        .status-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .status-badge {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: #fff;
+        }
+        .status-badge.critical { background-color: #d93025; }
+        .status-badge.warning  { background-color: #f29900; }
+        .status-badge.info     { background-color: #1a73e8; }
+        .status-badge.resolved { background-color: #188038; }
+
+        .status-date {
+            font-size: 13px;
+            color: #777;
+        }
+        .status-title {
+            font-weight: bold;
+            margin: 0;
+        }
+        .status-item p {
+            margin: 6px 0;
+        }
+        .status-item code {
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        .status-item ol, .status-item ul {
+            margin: 8px 0 4px 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>ADFastDNS Support</h1>
         <p>Welcome to the support page for <strong>ADFastDNS</strong>, your secure and lightweight DNS and Anti DPI proxy ad blocker for iOS. We're here to help you get the most out of ADFastDNS and ensure a seamless, private, and fast browsing experience.</p>
+    </div>
 
+    <!-- ============================================================
+         SERVICE STATUS / NOTICES
+         Add a new .status-item block at the TOP of #status-list for
+         each new notice. Copy an existing block as a template.
+
+         Available classes for .status-item / .status-badge:
+           critical  -> red    (something broken, action required)
+           warning   -> orange (partial issue / heads up)
+           info      -> blue   (general notice)
+           resolved  -> green  (past issue, now fixed)
+    ============================================================ -->
+    <div class="status-container">
+        <h2>Service Status &amp; Notices</h2>
+        <div id="status-list">
+
+            <div class="status-item warning">
+                <div class="status-header">
+                    <span class="status-badge warning">Action needed</span>
+                    <span class="status-date">August 10, 2026</span>
+                </div>
+                <p class="status-title">Hagezi Blocklist URL changed</p>
+                <p>Hagezi changed the location of their blocklist. If your Pro blocklist has stopped updating, please apply this manual workaround:</p>
+                <ol>
+                    <li>In the app, disable <strong>"Enable Anti-Spyware"</strong>.</li>
+                    <li>Update your BlockList URL to:<br>
+                        <code>https://raw.githubusercontent.com/hagezi/dns-blocklists-legacy/main/domains/pro.txt</code>
+                    </li>
+                    <li>Note that at the moment (10 August 2026) the github page of Hagezi is experiencing up and down, in case the workaround still doesn't work retry after a few hours</li>
+                </ol>
+                <p>We'll update this notice once this is handled automatically in-app (it will be in the 5.0 version).</p>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="container">
         <h2>About ADFastDNS</h2>
         <p>ADFastDNS is a high-performance DNS, ad blocker and Anti DPI proxy, designed for iOS 17 and later, optimized for iPhone and iPad. It leverages DNS over HTTPS (DoH) to provide secure, encrypted DNS resolution while blocking unwanted ads and trackers with customizable filter lists. With a focus on privacy, performance, and ease of use, ADFastDNS is the perfect alternative to traditional VPNs for users who value speed and control.</p>
         <p>Have a look at this visual cartoon that will guide you in how ADFastDNS will help you protecting your device from threats.<a href="adfastdns_explainer.html"> click here to see the cartoon </a></p>
@@ -118,7 +220,7 @@
     </div>
 
     <footer>
-        <p>Last updated: January 16, 2026</p>
+        <p>Last updated: August 10, 2026</p>
     </footer>
 </body>
 </html>
