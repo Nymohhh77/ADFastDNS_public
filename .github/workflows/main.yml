@@ -1,0 +1,42 @@
+name: Update ADFastDNS PRO blocklist mirror
+on:
+  schedule:
+    - cron: '20 20 * * *'   # 03:00 Bangkok time (UTC+7)
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download PRO blocklist
+        run: |
+          curl -fSL --retry 3 \
+            https://raw.githubusercontent.com/hagezi/dns-blocklists-legacy/main/domains/pro.txt \
+            -o pro.txt
+          if [ "$(wc -l < pro.txt)" -lt 1000 ]; then
+            echo "Downloaded file looks wrong (too few lines) - aborting"
+            exit 1
+          fi
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add pro.txt
+          git diff --staged --quiet || git commit -m "Update blocklist $(date -u +%F)"
+          git push
+
+      - name: Email me on failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ csocks@gmail.com }}
+          password: ${{ oxuj cocx sbkw jxai }}
+          subject: "⚠️ ADFastDNS blocklist mirror failed"
+          to: csocks@gmail.com
+          from: "GitHub Actions"
+          body: "The daily blocklist download failed on $(date -u). Check the Actions log: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
