@@ -34,8 +34,8 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 465
-          username: ${{ csocks@gmail.com }}
-          password: ${{ oxuj cocx sbkw jxai }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_APP_PASSWORD }}
           subject: "⚠️ ADFastDNS blocklist mirror failed"
           to: csocks@gmail.com
           from: "GitHub Actions"
