@@ -1,4 +1,4 @@
-name: Update ADFastDNS PRO blocklist mirror
+name: Update blocklist mirrors
 on:
   schedule:
     - cron: '20 20 * * *'   # 03:00 Bangkok time (UTC+7)
@@ -10,33 +10,63 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download PRO blocklist
+      - name: Download blocklists
+        id: download
         run: |
-          curl -fSL --retry 3 \
-            https://raw.githubusercontent.com/hagezi/dns-blocklists-legacy/main/domains/pro.txt \
-            -o pro.txt
-          if [ "$(wc -l < pro.txt)" -lt 1000 ]; then
-            echo "Downloaded file looks wrong (too few lines) - aborting"
-            exit 1
+          declare -A LISTS=(
+            [pro.txt]="https://raw.githubusercontent.com/hagezi/dns-blocklists-legacy/main/domains/pro.txt"
+            [tif.txt]="https://raw.githubusercontent.com/hagezi/dns-blocklists-legacy/main/domains/tif.txt"
+            [amnesty-domains.txt]="https://raw.githubusercontent.com/AmnestyTech/investigations/master/2021-07-18_nso/domains.txt"
+          )
+
+          FAILED=""
+          for name in "${!LISTS[@]}"; do
+            url="${LISTS[$name]}"
+            echo "Downloading $name from $url"
+            if curl -fSL --retry 3 "$url" -o "$name.tmp"; then
+              if [ "$(wc -l < "$name.tmp")" -lt 5 ]; then
+                echo "::warning::$name looks too small, treating as failed"
+                FAILED="$FAILED $name"
+                rm -f "$name.tmp"
+              else
+                mv "$name.tmp" "$name"
+              fi
+            else
+              echo "::warning::$name failed to download"
+              FAILED="$FAILED $name"
+            fi
+          done
+
+          if [ -n "$FAILED" ]; then
+            echo "failed_lists=$FAILED" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Commit and push if changed
+      - name: Commit and push whatever succeeded
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add pro.txt
-          git diff --staged --quiet || git commit -m "Update blocklist $(date -u +%F)"
+          git add pro.txt tif.txt amnesty-domains.txt 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "Update blocklist mirrors $(date -u +%F)"
           git push
 
-      - name: Email me on failure
-        if: failure()
+      - name: Email me if any list failed
+        if: steps.download.outputs.failed_lists != ''
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 465
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_APP_PASSWORD }}
-          subject: "⚠️ ADFastDNS blocklist mirror failed"
-          to: csocks@gmail.com
+          subject: "⚠️ ADFastDNS: blocklist(s) failed to download"
+          to: ${{ secrets.MAIL_USERNAME }}
           from: "GitHub Actions"
-          body: "The daily blocklist download failed on $(date -u). Check the Actions log: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          body: |
+            These lists failed to download and were left unchanged:${{ steps.download.outputs.failed_lists }}
+
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Fail the job if anything failed
+        if: steps.download.outputs.failed_lists != ''
+        run: |
+          echo "Failed lists:${{ steps.download.outputs.failed_lists }}"
+          exit 1
