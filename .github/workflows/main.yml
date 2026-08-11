@@ -16,8 +16,8 @@ jobs:
         id: download
         run: |
           declare -A LISTS=(
-            [pro.txt]="https://raw.githubusercontent.com/hagezi/dns-blocklists-legacy/main/domains/pro.txt"
-            [tif.txt]="https://raw.githubusercontent.com/hagezi/dns-blocklists-legacy/main/domains/tif.txt"
+            [pro.txt]="https://gitlab.com/hagezi/mirror/-/raw/main/dns-blocklists/wildcard/pro.txt"
+            [tif.txt]="https://gitlab.com/hagezi/mirror/-/raw/main/dns-blocklists/wildcard/tif.txt"
             [amnesty-domains.txt]="https://raw.githubusercontent.com/AmnestyTech/investigations/master/2021-07-18_nso/domains.txt"
           )
 
